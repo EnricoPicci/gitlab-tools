@@ -1,0 +1,35 @@
+diff --git a/README.md b/README.md
+index fac7533..41c5c10 100644
+--- a/README.md
++++ b/README.md
+@@ -21,6 +21,7 @@ Executing `npx gitlab-tools <app-name> -h` prints on the console the help for th
+ - [**Write Gitlab Group Project details**](./src/apps/write-group-projects/README.md): write to a csv file the GitLab project details of projects in a GitLab group
+ - [**Clone Gitlab Projects**](./src/apps/clone-group-repos/README.md): clone all the projects contained in a GitLab group
+ - [**Compare forks with upstream**](./src/apps/compare-forks-with-upstream/README.md): compare forked projects in GitLab group with upstream
++- [**Compare tags, branches, commits and get an LLM explanation of the diffs**](./src/apps/compare-tags-branches-commits-llm-explanation/README.md)
+ 
+ 
+ 
+diff --git a/src/apps/compare-tags-branches-commits-llm-explanation/README.md b/src/apps/compare-tags-branches-commits-llm-explanation/README.md
+new file mode 100644
+index 0000000..91767c9
+--- /dev/null
++++ b/src/apps/compare-tags-branches-commits-llm-explanation/README.md
+@@ -0,0 +1,16 @@
++# compare a tag or branch or commit with another tag or branch or commit
++
++This command compares a tag or a branch or a commit (i.e. a *ref*) to another tag or branch or commit and uses an **LLM** to generate an explanation of the differences for each file which has changed between the two **refs**.\
++The two *refs* compared can belong to the same repo or to different repos, which is useful in the case of forks where you may want to compare a certain *ref* on the forked project with a *ref* on the upstream project.\
++
++## algorithm
++The steps of the algorithm are the following:
++- Run the `cloc git-diff-rel --by-file` command to get the differences in the files on the two *refs* (**cloc** details [here](https://github.com/AlDanial/cloc))
++- For each file with differences, run the command `git diff from to -- file` to retrieve the differneces in the **git** format
++- for each file with differences, read the file content from the local disk (if the file has diffs because it has been deleted, the file content will be empty)
++- send to the **LLM** the changes, in **git** format, the file content and a prompt asking to generate a summary of the changes
++
++## output
++The command produces the following files:
++- `${projectDirName}-compare-with-upstream-explanations-${timeStampYYYYMMDDHHMMSS}.csv`: this is the csv file that contains the data about the diffs (e.g. lines of code modified, added or removed) as well as the explanation produced by the **LLM**
++- `${projectDirName}-executed-commands-${timeStampYYYYMMDDHHMMSS}.txt`: the log of all the **cloc** and **git** commands which have been executed
+\ No newline at end of file
