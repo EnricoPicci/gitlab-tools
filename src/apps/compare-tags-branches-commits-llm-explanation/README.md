@@ -12,5 +12,6 @@ The steps of the algorithm are the following:
 
 ## output
 The command produces the following files:
+- `${projectDirName}-compare-with-upstream-explanations-${timeStampYYYYMMDDHHMMSS}.md`: this is the marksown file that contains the reposrt containing the summaries produced by the **LLM**
 - `${projectDirName}-compare-with-upstream-explanations-${timeStampYYYYMMDDHHMMSS}.csv`: this is the csv file that contains the data about the diffs (e.g. lines of code modified, added or removed) as well as the explanation produced by the **LLM**
 - `${projectDirName}-executed-commands-${timeStampYYYYMMDDHHMMSS}.txt`: the log of all the **cloc** and **git** commands which have been executed

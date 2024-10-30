@@ -1,12 +1,12 @@
 import { of, catchError, map } from "rxjs"
 import { getFullCompletion$ } from "../openai/openai"
-import { ExplainDiffPromptTemplateData, fillPromptTemplateExplainDiff } from "../openai/prompt-templates"
+import { ExplainDiffPromptTemplateData, fillPromptTemplateExplainDiff, languageFromExtension } from "../openai/prompt-templates"
 
 
 export type PromptTemplates = {
-    changedFile: string,
-    removedFile: string,
-    addedFile: string,
+    changedFile: { prompt: string, description: string },
+    removedFile: { prompt: string, description: string },
+    addedFile: { prompt: string, description: string },
 }
 export type FileInfo = {
     extension: string
@@ -37,28 +37,15 @@ export type ExplanationRec = FileInfo & {
 export function explainGitDiffs$<T>(
     explanationInput: T & ExplanationInput, promptTemplates: PromptTemplates, executedCommands: string[]
 ) {
-    let language = ''
-    // if the extension is .java, we can assume that the language is java
-    // if the extension is .ts, we can assume that the language is TypeScript
-    // Use a switch statement to handle other languages
-    switch (explanationInput.extension) {
-        case '.java':
-            language = 'java'
-            break
-        case '.ts':
-            language = 'TypeScript'
-            break
-        default:
-            language = ''
-    }
+    const language = languageFromExtension(explanationInput.extension)
 
     let promptTemplate = ''
     if (explanationInput.deleted) {
-        promptTemplate = promptTemplates.removedFile
+        promptTemplate = promptTemplates.removedFile.prompt
     } else if (explanationInput.added) {
-        promptTemplate = promptTemplates.addedFile
+        promptTemplate = promptTemplates.addedFile.prompt
     } else {
-        promptTemplate = promptTemplates.changedFile
+        promptTemplate = promptTemplates.changedFile.prompt
     }
     if (promptTemplate === '') {
         let fileStatus = ''

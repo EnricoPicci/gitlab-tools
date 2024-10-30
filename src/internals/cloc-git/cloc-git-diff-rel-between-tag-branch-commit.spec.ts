@@ -2,7 +2,7 @@ import fs from 'fs';
 import { toArray } from 'rxjs';
 
 import { expect } from 'chai';
-import { ComparisonParams, allDiffsForProjectWithExplanation$ } from './cloc-git-diff-rel-between-commits';
+import { ComparisonParams, allDiffsForProjectWithExplanation$ } from './cloc-git-diff-rel-between-tag-branch-commit';
 import { PromptTemplates } from '../git/explain-diffs';
 import path from 'path';
 
@@ -160,7 +160,7 @@ describe(`allDiffsForProjectWithExplanation$`, () => {
     it(`should return the diffs between a branch of the local repo and a branch on the remote repo`, (done) => {
         const comparisonParams: ComparisonParams = {
             projectDir: './',
-            from_tag_branch_commit: 'main',
+            from_tag_branch_commit: 'one-branch-on-upstream',
             to_tag_branch_commit: 'one-branch',
             url_to_remote_repo: url_to_remote_forked_repo,
         }
@@ -174,9 +174,18 @@ describe(`allDiffsForProjectWithExplanation$`, () => {
             toArray()
         ).subscribe({
             next: (diffs) => {
-                // there is a difference of 3 files between the 2 tags 
-                // https://github.com/EnricoPicci/gitlab-tools/compare/main...codemotion-2018-rome-rxjs-node:gitlab-tools:one-branch
-                expect(diffs.length).equal(3)
+                // there is a difference of 4 files between the 2 branches 
+                // the follwoing command shows the differences correctly (5 files, but only 4 are of type TypeScript or Markdown)
+                // git diff origin/one-branch-on-upstream base/one-branch --name-only
+                // If we run the diff with the GitHub web client we see only 3 files of differences, which seems not correct
+                // https://github.com/EnricoPicci/gitlab-tools/compare/one-branch-on-upstream...codemotion-2018-rome-rxjs-node:gitlab-tools:one-branch
+                // The file with diffs that is missing from the view of the GitHub web client is the file "ts-file-added-to-second-branch.ts"
+                // which is though present NOT present in the branch "one-branch" of the remote repo
+                // https://github.com/codemotion-2018-rome-rxjs-node/gitlab-tools/tree/one-branch
+                // but is present in the branch "one-branch-on-upstream" of the local repo
+                // https://github.com/EnricoPicci/gitlab-tools/tree/one-branch-on-upstream
+                // which would bring us to expect 4 files of differences
+                expect(diffs.length).equal(4)
             },
             error: (error: any) => done(error),
             complete: () => done()
@@ -199,9 +208,9 @@ function readPromptTemplates() {
     const promptRemoved = fs.readFileSync(_promptTemplateFileRemoved, 'utf-8');
 
     const promptTemplates: PromptTemplates = {
-        changedFile: promptChanged,
-        addedFile: promptAdded,
-        removedFile: promptRemoved
+        changedFile: { prompt: promptChanged, description: 'Prompt to summarize the changes in a file' },
+        addedFile: { prompt: promptAdded, description: 'Prompt to summarize a file that has been added' },
+        removedFile: { prompt: promptRemoved, description: 'Prompt to summarize a file that has been removed' }
     }
     return promptTemplates
 }
