@@ -6,7 +6,7 @@ import { toCsvObs } from "@enrico.piccinin/csv-tools"
 
 import { compareForksWithUpstreamInGroup$ } from "../gitlab/compare-forks"
 import { readGroup$ } from "../gitlab/group"
-import { allDiffsForProject$, clocDiffRelForProject$, ClocGitDiffRec, FileStatus } from "../cloc-git/cloc-git-diff-rel-between-commits"
+import { allDiffsForProject$, clocDiffRelForProject$, ClocGitDiffRec, FileStatus } from "../cloc-git/cloc-git-diff-rel-between-tag-branch-commit"
 import { explainGitDiffs$, PromptTemplates } from "../git/explain-diffs"
 
 //********************************************************************************************************************** */
@@ -35,7 +35,6 @@ export function compareForksInGroupWithUpstreamClocGitDiffRelByFile$(
     repoRootFolder: string,
     executedCommands: string[],
     languages?: string[],
-    concurrentClocGitDiff = 5
 ) {
     return compareForksWithUpstreamInGroup$(gitLabUrl, token, groupId, groupName).pipe(
         filter(comparisonResult => {
@@ -46,11 +45,16 @@ export function compareForksInGroupWithUpstreamClocGitDiffRelByFile$(
             }
             return true
         }),
-        mergeMap(comparisonResult => {
+        // we MUST use concatMap here to ensure that clocDiffRelForProject$ is not streaming concurrently but only sequentially
+        // in other words clocDiffRelForProject$ must return one value for one comparisonResult before starting for the next one
+        // this ensures that the command cloc --git-diff-rel --by-file is not executed concurrently for different projects
+        // Since clocDiffRelForProject$ triggers the command "cloc --git-diff-rel --by-file" which itself 
+        // outputs on the stdout, we must ensure that the output of the command is not mixed up  
+        concatMap(comparisonResult => {
             const projectDir = projectDirFromProjectName(comparisonResult.project_name!, repoRootFolder)
             const _comparisonResult = { ...comparisonResult, projectDir }
             return clocDiffRelForProject$(_comparisonResult, repoRootFolder, executedCommands, languages)
-        }, concurrentClocGitDiff),
+        }),
     )
 }
 

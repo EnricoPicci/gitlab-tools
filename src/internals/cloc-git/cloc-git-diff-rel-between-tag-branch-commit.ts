@@ -100,11 +100,16 @@ export function allDiffsForProject$(
     comparisonParams: ComparisonParams,
     repoRootFolder: string,
     executedCommands: string[],
-    languages?: string[],
-    concurrentGitDiff = 1
+    languages?: string[]
 ): Observable<FileDiffWithGitDiffsAndFileContent> {
     return clocDiffRelForProject$(comparisonParams, repoRootFolder, executedCommands, languages).pipe(
-        mergeMap(rec => {
+        // we MUST use concatMap here to ensure that gitDiff$ is not streaming concurrently but only sequentially
+        // in other words gitDiff$ must return the bufferDiffLines value before starting for the next one
+        // gitDiffs$ eventually calls the command "git diff" which outputs on the stdout - gitDiffs$ Obsrvable accumulates the output
+        // sent to the stdout and returns it as a buffer string (diffLinesString)
+        // Using concatMap (which just mergeMap with concurrency set to 1) ensures that the command "git diff" 
+        // is not executed concurrently for different projects
+        concatMap(rec => {
             console.log(`Calculating git diff for ${rec.fullFilePath}`)
             return gitDiff$(
                 rec.projectDir!,
@@ -116,8 +121,8 @@ export function allDiffsForProject$(
                 rec.File,
                 executedCommands
             ).pipe(
-                map(bufferDiffLines => {
-                    const diffLines = bufferDiffLines.toString()
+                map(diffLinesString => {
+                    const diffLines = diffLinesString.toString()
                     const _lines = diffLines.split('\n')
                     const _rec: FileDiffWithGitDiffsAndFileContent = {
                         ...rec, diffLines, fileContent: '', deleted: null, added: null, copied: null, renamed: null
@@ -140,7 +145,7 @@ export function allDiffsForProject$(
                     return { ..._rec, diffLines }
                 })
             )
-        }, concurrentGitDiff),
+        }),
         concatMap((rec: FileDiffWithGitDiffsAndFileContent & { diffLines: string }) => {
             return readLinesObs(rec.fullFilePath!).pipe(
                 map(lines => {
@@ -265,6 +270,8 @@ export function writeAllDiffsForProjectWithExplanationToMarkdown$(
 //********************************************************************************************************************** */
 // these functions may be exported for testing purposes
 
+// this stream is not safe in concurrent execution and therefore shouls NOT be called by operators that work concurrently
+// e.g. mergeMap
 export function clocDiffRel$(
     projectDir: string,
     fromToParams: { from_tag_or_branch: string, to_tag_or_branch: string, url_to_remote_repo?: string, languages?: string[] },
