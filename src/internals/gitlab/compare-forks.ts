@@ -160,7 +160,7 @@ export type ComparisonWithUpstreamResult = {
     project_name: string;
     upstream_repo_name: string;
     upstream_repo_forks_count: number;
-    upstream_url_to_repo: string;
+    url_to_remote_repo: string;
     ahead_behind_commits_url: string;
 } & ComparisonBetweenCommitsResult
 export type ComparisonWithUpstreamResultWithDiffs = {
@@ -362,11 +362,11 @@ export function compareForkLastTagOrBranchWithUpstreamDefaultBranch$(gitLabUrl: 
             )
             return forkJoin([from_fork_to_upstream$, from_upstream_to_fork$]).pipe(
                 map(([from_fork_to_upstream, from_upstream_to_fork]) => {
-                    return { from_fork_to_upstream, from_upstream_to_fork, projectData, lastTagOrBranchName, upstreamBranchName: projectData.upstream_repo_default_branch, upstream_url_to_repo: projectData.upstream_repo?.http_url_to_repo }
+                    return { from_fork_to_upstream, from_upstream_to_fork, projectData, lastTagOrBranchName, upstreamBranchName: projectData.upstream_repo_default_branch, url_to_remote_repo: projectData.upstream_repo?.http_url_to_repo }
                 })
             )
         }),
-        map(({ from_fork_to_upstream, from_upstream_to_fork, projectData, lastTagOrBranchName, upstreamBranchName, upstream_url_to_repo }) => {
+        map(({ from_fork_to_upstream, from_upstream_to_fork, projectData, lastTagOrBranchName, upstreamBranchName, url_to_remote_repo }) => {
             const num_commits_ahead = from_upstream_to_fork.commits.length
             const num_commits_behind = from_fork_to_upstream.commits.length
             // build the url for GitLab that shows the commits ahead and behind for the forked project, a url like, for instance:
@@ -394,7 +394,7 @@ export function compareForkLastTagOrBranchWithUpstreamDefaultBranch$(gitLabUrl: 
                 web_url_to_commit: from_upstream_to_fork.web_url,
                 upstream_repo_name: projectData.upstream_repo_name!,
                 upstream_repo_forks_count: projectData.upstream_repo_forks_count!,
-                upstream_url_to_repo: upstream_url_to_repo!,
+                url_to_remote_repo: url_to_remote_repo!,
                 ahead_behind_commits_url: ahead_behind_commits_url,
                 diffs: from_fork_to_upstream.diffs
             }

@@ -117,12 +117,16 @@ function pagedCommand(command: string, page: number) {
  */
 export function nextPage(totPages: number) {
     let page = 1
-    return (x_next_page?: string) => {
-        if (page === totPages || !x_next_page) {
+    const noNextPage = '-'
+    return (x_next_page = noNextPage) => {
+        if (page === totPages || x_next_page === undefined) {
             return -1
         }
-        if (x_next_page) {
+        if (x_next_page && x_next_page !== noNextPage) {
             return parseInt(x_next_page)
+        }
+        if (!x_next_page) {
+            return -1
         }
         page++
         return page

@@ -5,16 +5,20 @@ import { convertHttpsToSshUrl } from "./convert-ssh-https-url"
 
 export function cdToProjectDirAndAddRemote$(
     projectDir: string,
-    fromToParams: { upstream_url_to_repo?: string },
+    fromToParams: { url_to_remote_repo?: string, use_ssh?: boolean },
     executedCommands: string[]
 ) {
     const baseRemoteName = 'base'
-    const upstream_url_to_repo = fromToParams.upstream_url_to_repo
+    const url_to_remote_repo = fromToParams.url_to_remote_repo
     let commandIfRemoteExists = ''
-    if (upstream_url_to_repo) {
-        // convert to ssh url to avoid password prompts
-        const sshUrl = convertHttpsToSshUrl(upstream_url_to_repo)
-        commandIfRemoteExists = ` && git remote add ${baseRemoteName} ${sshUrl} && git fetch --all --tags`
+    if (url_to_remote_repo) {
+        // convert to ssh url if required (e.g. to avoid password prompts)
+        let remoteUrl = url_to_remote_repo
+        if (fromToParams.use_ssh) {
+            remoteUrl = convertHttpsToSshUrl(url_to_remote_repo)
+        }
+        // the command must add git fetch the remote after the remote has been added
+        commandIfRemoteExists = ` && git remote add ${baseRemoteName} ${remoteUrl} && git fetch ${baseRemoteName} --tags`
     }
     const command = `cd ${projectDir} && git fetch --all --tags ${commandIfRemoteExists}`
 

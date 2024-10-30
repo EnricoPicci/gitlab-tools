@@ -51,7 +51,8 @@ export type ComparisonParams = {
     projectDir: string
     from_tag_branch_commit: string
     to_tag_branch_commit: string
-    upstream_url_to_repo?: string
+    url_to_remote_repo?: string
+    use_ssh?: boolean
 }
 export function clocDiffRelForProject$(
     comparisonParams: ComparisonParams, repoRootFolder: string, executedCommands: string[], languages?: string[]
@@ -63,7 +64,7 @@ export function clocDiffRelForProject$(
         {
             from_tag_or_branch: comparisonParams.from_tag_branch_commit,
             to_tag_or_branch: comparisonParams.to_tag_branch_commit,
-            upstream_url_to_repo: comparisonParams.upstream_url_to_repo,
+            url_to_remote_repo: comparisonParams.url_to_remote_repo,
             languages
         },
         executedCommands
@@ -103,7 +104,7 @@ export function allDiffsForProject$(
                 {
                     from_tag_or_branch: comparisonParams.from_tag_branch_commit,
                     to_tag_or_branch: comparisonParams.to_tag_branch_commit,
-                    upstream_url_to_repo: comparisonParams.upstream_url_to_repo
+                    url_to_remote_repo: comparisonParams.url_to_remote_repo
                 },
                 rec.File,
                 executedCommands
@@ -203,7 +204,7 @@ export function writeAllDiffsForProjectWithExplanationToCsv$(
 
 export function clocDiffRel$(
     projectDir: string,
-    fromToParams: { from_tag_or_branch: string, to_tag_or_branch: string, upstream_url_to_repo?: string, languages?: string[] },
+    fromToParams: { from_tag_or_branch: string, to_tag_or_branch: string, url_to_remote_repo?: string, languages?: string[] },
     executedCommands: string[]
 ) {
     return cdToProjectDirAndAddRemote$(
@@ -216,14 +217,14 @@ export function clocDiffRel$(
             const from_tag_branch_commit = fromToParams.from_tag_or_branch
             // `cloc --git-diff-rel --csv --by-file base/${upstream_repo_tag_or_branch} origin/${fork_tag_or_branch}`
             const command = `cloc`
-            const compareWithRemote = fromToParams.upstream_url_to_repo ? true : false
+            const compareWithRemote = fromToParams.url_to_remote_repo ? true : false
             const prefixes = toFromTagBranchCommitPrefix(to_tag_branch_commit, from_tag_branch_commit, compareWithRemote)
             const args = [
                 '--git-diff-rel',
                 '--csv',
                 '--by-file',
-                `${prefixes.toTagBranchCommitPrefix}${from_tag_branch_commit}`,
-                `${prefixes.fromTagBranchCommitPrefix}${to_tag_branch_commit}`
+                `${prefixes.fromTagBranchCommitPrefix}${from_tag_branch_commit}`,
+                `${prefixes.toTagBranchCommitPrefix}${to_tag_branch_commit}`
             ]
 
             if (fromToParams.languages && fromToParams.languages?.length > 0) {
