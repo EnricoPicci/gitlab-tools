@@ -2,9 +2,10 @@ import fs from 'fs';
 import { toArray } from 'rxjs';
 
 import { expect } from 'chai';
-import { ComparisonParams, allDiffsForProjectWithExplanation$ } from './cloc-git-diff-rel-between-tag-branch-commit';
+import { allDiffsForProjectWithExplanation$ } from './cloc-git-diff-rel-between-tag-branch-commit';
 import { PromptTemplates } from '../git/explain-diffs';
 import path from 'path';
+import { ComparisonParams } from './cloc-diff-rel';
 
 describe(`allDiffsForProjectWithExplanation$`, () => {
     const repoRootFolder = './'
