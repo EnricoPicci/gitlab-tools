@@ -1,6 +1,6 @@
 {
   "name": "@enrico.piccinin/gitlab-tools",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "tools to work with gitlab repositories",
   "main": "index.js",
   "bin": {
