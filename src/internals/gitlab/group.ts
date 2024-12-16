@@ -18,6 +18,9 @@ export function readGroup$(gitLabUrl: string, token: string, groupId: string) {
             if (err.code === 'ERR_BAD_REQUEST') {
                 console.error(`Status: ${err.response.status} - ${err.response.statusText}`)
             }
+            else {
+                console.error(err)
+            }
             return EMPTY
         })
     )
