@@ -10,36 +10,6 @@ import { writeFileObs } from "observable-fs";
 //********************************************************************************************************************** */
 
 /**
- * This function writes all projects details of a specific group into a CSV file.
- * It first reads the group details using the provided GitLab URL, token, and group ID.
- * Then, it fetches all projects of the group.
- * Finally, it writes these projects into a CSV file in the specified output directory.
- * The CSV file is named as "{group name}-projects.csv".
- * As an example it can be used to identify which projects are forked from other projects.
- * 
- * @param gitLabUrl - The URL of the GitLab instance.
- * @param token - The token to authenticate with the GitLab instance.
- * @param groupId - The ID of the group whose projects are to be written into the CSV.
- * @param outdir - The directory where the CSV file will be written.
- * @returns An Observable that emits the the file path once projects are written into the CSV file.
- */
-export function writeGroupProjectsToCsv$(gitLabUrl: string, token: string, groupId: string, outdir: string) {
-    let groupName: string
-
-    return readGroup$(gitLabUrl, token, groupId).pipe(
-        concatMap(group => {
-            groupName = group.name
-            return fetchAllGroupProjects$(gitLabUrl, token, groupId)
-        }),
-        toArray(),
-        concatMap((projects) => {
-            const outFile = path.join(outdir, `${groupName}-projects.csv`);
-            return writeProjectsToCsv$(projects, [groupName], outFile)
-        }),
-    )
-}
-
-/**
  * This function reads projects from multiple groups and writes them into a CSV file.
  * It first reads the projects of each group ID in the provided array using the provided GitLab URL and token.
  * Then, it writes all these projects into a CSV file in the specified output directory.
@@ -58,6 +28,11 @@ export function writeMultiGroupProjectsToCsv$(gitLabUrl: string, token: string, 
             const outFile = path.join(outdir, `${groupIds.join('-')}-groups-projects.csv`);
             return writeProjectsToCsv$(projects, groupIds, outFile)
         }),
+        tap(
+            (outfile) => {
+                console.log(`====>>>> projects info written to file: `, outfile)
+            },
+        )
     )
 }
 

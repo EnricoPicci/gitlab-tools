@@ -17,6 +17,10 @@
     "version": "npm run tsc && git add -A dist",
     "postversion": "git push"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EnricoPicci/gitlab-tools"
+  },
   "keywords": [
     "gitlab"
   ],

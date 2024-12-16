@@ -6,15 +6,15 @@
 
 The apps can be launched with the command
 
-`npx gitlab-tools <app-name> <params>`
+`npx "@enrico.piccinin/gitlab-tools@latest" <app-name> <params>`
 
 or, if we have cloned gitlab-tools repo, from the gitlab-tools repo folder launching the command
 
 `node ./dist/lib/command.js <app-name> <params>`
 
-Executing `npx gitlab-tools` prints on the console the list of available apps.
+Executing `npx "@enrico.piccinin/gitlab-tools@latest"` prints on the console the list of available apps.
 
-Executing `npx gitlab-tools <app-name> -h` prints on the console the help for the specific app.
+Executing `npx "@enrico.piccinin/gitlab-tools@latest" <app-name> -h` prints on the console the help for the specific app.
 
 ## apps available
 - [**Analyze Merge Requests**](./src/apps/analyze-merge-requests/README.md): analyze the merge requests of a gitlab group
