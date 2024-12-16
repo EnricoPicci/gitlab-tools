@@ -4,6 +4,13 @@ import { GroupCompact } from "./group.model"
 import { runPagedCommand } from "./paged-command"
 
 export function readGroup$(gitLabUrl: string, token: string, groupId: string) {
+    // the url must not have http or https in it
+    if (gitLabUrl.startsWith('http://')) {
+        gitLabUrl = gitLabUrl.replace('http://', '')
+    }
+    if (gitLabUrl.startsWith('https://')) {
+        gitLabUrl = gitLabUrl.replace('https://', '')
+    }
     const command = `https://${gitLabUrl}/api/v4/groups/${groupId}`
     return from(axios.get(command, {
         headers: {
