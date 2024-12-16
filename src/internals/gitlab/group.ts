@@ -45,6 +45,12 @@ export function fetchAllGroupProjects$(gitLabUrl: string, token: string, groupId
             return projects
         }),
         tap(projects => {
+            // replace comma with - in the project description
+            projects.forEach((project: any) => {
+                if (project.description) {
+                    project.description = project.description.replaceAll(',', '-')
+                }
+            })
             const groupNameOrId = groupName ? groupName : groupId
             console.log(`====>>>> number of projects read from group "${groupNameOrId}"`, projects.length)
         }),
