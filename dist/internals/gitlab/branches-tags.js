@@ -19,13 +19,13 @@ function getTags$(gitLabUrl, token, projectId) {
 }
 exports.getTags$ = getTags$;
 function getBranches$(gitLabUrl, token, projectId) {
+    console.log(`Start reading branches for project ${projectId}`);
     const command = getBranchesCommand(gitLabUrl, projectId);
-    return (0, paged_command_1.runPagedCommand)(command, token).pipe((0, rxjs_1.concatMap)(branches => (0, rxjs_1.from)(branches)));
+    return (0, paged_command_1.runPagedCommand)(command, token, 'branches');
 }
 exports.getBranches$ = getBranches$;
 function getLastBranch$(gitLabUrl, token, projectId) {
-    const command = getBranchesCommand(gitLabUrl, projectId);
-    return (0, paged_command_1.runPagedCommand)(command, token).pipe((0, rxjs_1.map)(branches => {
+    return getBranches$(gitLabUrl, token, projectId).pipe((0, rxjs_1.map)(branches => {
         // sort by commit date
         branches.sort((a, b) => {
             return new Date(b.commit.committed_date).getTime() - new Date(a.commit.committed_date).getTime();

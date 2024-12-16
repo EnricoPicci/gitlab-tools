@@ -6,7 +6,7 @@ const compare_forks_1 = require("../../internals/gitlab/compare-forks");
 function launchCompareForksWithUpstream() {
     console.log('====>>>> Launching Compare Forks with Upstream <<<<====');
     const { gitLabUrl, token, groupId, outdir } = readParams();
-    (0, compare_forks_1.writeCompareForksWithFileDetailsInGroupToCsv$)(gitLabUrl, token, groupId, outdir).subscribe();
+    (0, compare_forks_1.writeCompareForksWithUpstreamFileDetailsInGroupToCsv$)(gitLabUrl, token, groupId, outdir).subscribe();
 }
 exports.launchCompareForksWithUpstream = launchCompareForksWithUpstream;
 function readParams() {

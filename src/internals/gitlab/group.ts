@@ -38,6 +38,13 @@ export function fetchGroupDescendantGroups(gitLabUrl: string, token: string, gro
 
 export function fetchAllGroupProjects$(gitLabUrl: string, token: string, groupId: string, groupName = '', includeArchived = false) {
     console.log(`====>>>> reading all projects from group with id "${groupId}"`)
+    // the url must not have http or https in it
+    if (gitLabUrl.startsWith('http://')) {
+        gitLabUrl = gitLabUrl.replace('http://', '')
+    }
+    if (gitLabUrl.startsWith('https://')) {
+        gitLabUrl = gitLabUrl.replace('https://', '')
+    }
     const command = `https://${gitLabUrl}/api/v4/groups/${groupId}/projects?include_subgroups=true&per_page=100`
     return runPagedCommand(command, token, 'groups').pipe(
         map(resp => {

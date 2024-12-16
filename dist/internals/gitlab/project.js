@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compareProjects$ = exports.cloneProject$ = exports.readProject$ = void 0;
+exports.compareFromTagOrBranchToCommit$ = exports.compareProjects$ = exports.cloneProject$ = exports.readProject$ = void 0;
 const axios_1 = __importDefault(require("axios"));
 const rxjs_1 = require("rxjs");
 const repo_1 = require("../git/repo");
@@ -45,4 +45,15 @@ function compareProjects$(gitLabUrl, token, fromProjectID, fromProjectBranchTagN
     }));
 }
 exports.compareProjects$ = compareProjects$;
+function compareFromTagOrBranchToCommit$(gitLabUrl, token, projectID, fromBranchTagName, toCommit, straight = true) {
+    const command = `https://${gitLabUrl}/api/v4/projects/${projectID}/repository/compare?from=${fromBranchTagName}&to=${toCommit}&straight=${straight}`;
+    return (0, rxjs_1.from)(axios_1.default.get(command, {
+        headers: {
+            "PRIVATE-TOKEN": token
+        }
+    })).pipe((0, rxjs_1.map)(resp => {
+        return resp.data;
+    }));
+}
+exports.compareFromTagOrBranchToCommit$ = compareFromTagOrBranchToCommit$;
 //# sourceMappingURL=project.js.map

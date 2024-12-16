@@ -5,7 +5,7 @@ const merge_request_model_1 = require("./merge-request.model");
 const paged_command_1 = require("./paged-command");
 function readMergeRequestsForGroup(gitLabUrl, token, groupId) {
     const command = listMergeRequestsCommand(gitLabUrl, groupId);
-    return (0, paged_command_1.runPagedCommand)(command, token);
+    return (0, paged_command_1.runPagedCommand)(command, token, 'merge_requests');
 }
 exports.readMergeRequestsForGroup = readMergeRequestsForGroup;
 function toMergeRequestCompact(mergeRequests) {

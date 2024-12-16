@@ -2,11 +2,11 @@ import { Command } from "commander";
 import { cloneGroupProjects } from "./internals/clone-group-projects";
 
 export function launchCloneGroupProjects() {
-    console.log('====>>>> Launching Clone of Group Projects')
+    console.log('====>>>> Launching Clone of Group Projects <<<<====');
 
-    const { gitLabUrl, token, groupId, outdir } = readParams();
+    const { gitLabUrl, token, groupIds, outdir } = readParams();
 
-    cloneGroupProjects(gitLabUrl, token, groupId, outdir).subscribe()
+    cloneGroupProjects(gitLabUrl, token, groupIds, outdir).subscribe()
 }
 
 function readParams() {
@@ -23,8 +23,8 @@ function readParams() {
             `private token to access the gitlab api (e.g. abcde-Abcde1GhijKlmn2Opqrs)`,
         )
         .requiredOption(
-            '--groupId <string>',
-            `id of the group to clone (e.g. 1234)`,
+            '--groupIds <string...>',
+            `ids of the groups to clone (e.g. 1234 5678 9012)`,
         )
         .option(
             '--outdir <string>',
@@ -34,5 +34,5 @@ function readParams() {
     const _options = program.parse(process.argv).opts();
     const outdir = _options.outdir || process.cwd();
 
-    return { gitLabUrl: _options.gitLabUrl, token: _options.token, groupId: _options.groupId, outdir };
+    return { gitLabUrl: _options.gitLabUrl, token: _options.token, groupIds: _options.groupIds, outdir };
 }

@@ -10,7 +10,7 @@ function cloneRepo(url, repoPath, repoName) {
     if (!repoPath)
         throw new Error(`Path is mandatory`);
     const command = `git clone ${url} ${repoPath.replaceAll(' ', '_')}`;
-    return (0, execute_command_1.executeCommandObs)(`Clone ${repoName}`, command).pipe((0, rxjs_1.tap)(() => `${repoName} cloned`), (0, rxjs_1.map)(() => repoPath), (0, rxjs_1.catchError)((err) => {
+    return (0, execute_command_1.executeCommandObs$)(`Clone ${repoName}`, command).pipe((0, rxjs_1.tap)(() => `${repoName} cloned`), (0, rxjs_1.map)(() => repoPath), (0, rxjs_1.catchError)((err) => {
         console.error(`!!!!!!!!!!!!!!! Error: while cloning repo "${repoName}" - error code: ${err.code}`);
         console.error(`!!!!!!!!!!!!!!! Command erroring: "${command}"`);
         return rxjs_1.EMPTY;

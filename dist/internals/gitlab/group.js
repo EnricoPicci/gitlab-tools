@@ -35,13 +35,28 @@ function fetchGroupDescendantGroups(gitLabUrl, token, groupId) {
     }));
 }
 exports.fetchGroupDescendantGroups = fetchGroupDescendantGroups;
-function fetchAllGroupProjects$(gitLabUrl, token, groupId, includeArchived = false) {
+function fetchAllGroupProjects$(gitLabUrl, token, groupId, groupName = '', includeArchived = false) {
+    console.log(`====>>>> reading all projects from group with id "${groupId}"`);
+    // the url must not have http or https in it
+    if (gitLabUrl.startsWith('http://')) {
+        gitLabUrl = gitLabUrl.replace('http://', '');
+    }
+    if (gitLabUrl.startsWith('https://')) {
+        gitLabUrl = gitLabUrl.replace('https://', '');
+    }
     const command = `https://${gitLabUrl}/api/v4/groups/${groupId}/projects?include_subgroups=true&per_page=100`;
-    return (0, paged_command_1.runPagedCommand)(command, token).pipe((0, rxjs_1.map)(resp => {
+    return (0, paged_command_1.runPagedCommand)(command, token, 'groups').pipe((0, rxjs_1.map)(resp => {
         const projects = includeArchived ? resp : resp.filter((project) => !project.archived);
         return projects;
     }), (0, rxjs_1.tap)(projects => {
-        console.log(`====>>>> number of projects read from group with id "${groupId}"`, projects.length);
+        // replace comma with - in the project description
+        projects.forEach((project) => {
+            if (project.description) {
+                project.description = project.description.replaceAll(',', '-');
+            }
+        });
+        const groupNameOrId = groupName ? groupName : groupId;
+        console.log(`====>>>> number of projects read from group "${groupNameOrId}"`, projects.length);
     }), (0, rxjs_1.concatMap)(projects => (0, rxjs_1.from)(projects)));
 }
 exports.fetchAllGroupProjects$ = fetchAllGroupProjects$;
