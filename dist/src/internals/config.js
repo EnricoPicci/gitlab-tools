@@ -7,3 +7,4 @@ exports.CONFIG = {
     // Default timeout for the cloc command - used to avoid timout errors
     CLOC_TIMEOUT: 1000000,
 };
+//# sourceMappingURL=config.js.map

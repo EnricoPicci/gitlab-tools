@@ -1,0 +1,162 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = __importDefault(require("fs"));
+const rxjs_1 = require("rxjs");
+const chai_1 = require("chai");
+const cloc_git_diff_rel_between_tag_branch_commit_1 = require("./cloc-git-diff-rel-between-tag-branch-commit");
+const path_1 = __importDefault(require("path"));
+describe(`allDiffsForProjectWithExplanation$`, () => {
+    const repoRootFolder = './';
+    const executedCommands = [];
+    const languages = ['Markdown', "TypeScript"];
+    const promptTemplates = readPromptTemplates();
+    //===================== TESTS ON LOCAL REPO =====================
+    it(`should return the diffs between 2 tags of the local repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'tags/first-tag',
+            to_tag_branch_commit: 'tags/second-tag',
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 2 files between the 2 tags 
+                // https://github.com/EnricoPicci/gitlab-tools/compare/first-tag...second-tag
+                // for a likely bug in the command cloc --git-diff-rel the files changed are 3 and not 2 (the file README.md is counted twice)
+                (0, chai_1.expect)(diffs.length).equal(3);
+            },
+            error: (error) => done(error),
+            complete: () => done()
+        });
+    }).timeout(100000);
+    it(`should return the diffs between a tag and a branch of the local repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'tags/first-tag',
+            to_tag_branch_commit: 'one-branch-on-upstream',
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 3 files of type TypeScript or Markdown between the tag and the branch
+                // there is a fourth file changed but this is with extension .txt and is not counted
+                // https://github.com/EnricoPicci/gitlab-tools/compare/first-tag...one-branch-on-upstream
+                // for a likely bug in the command cloc --git-diff-rel the files changed are 4 and not 3 (the file README.md is counted twice)
+                (0, chai_1.expect)(diffs.length).equal(4);
+            },
+            error: (error) => {
+                done(error);
+            },
+            complete: () => done()
+        });
+    }).timeout(100000);
+    it(`should return the diffs between a branch and a commit of the local repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'one-branch-on-upstream',
+            to_tag_branch_commit: 'ef0f4d45543313067ba84926102b8fa013a98932',
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 1 files of type TypeScript or Markdown between the branch and the commit
+                // there is a second file changed but this is with extension .txt and is not counted
+                // If you check on GitHub web client with the url 
+                // https://github.com/EnricoPicci/gitlab-tools/compare/one-branch-on-upstream...ef0f4d45543313067ba84926102b8fa013a98932
+                // no changes are shown, but if we switch the base and the head of the comparison we see the changes
+                // https://github.com/EnricoPicci/gitlab-tools/compare/ef0f4d45543313067ba84926102b8fa013a98932...one-branch-on-upstream
+                // the git diff command shows the changes correctly in both cases
+                (0, chai_1.expect)(diffs.length).equal(1);
+            },
+            error: (error) => {
+                done(error);
+            },
+            complete: () => done()
+        });
+    }).timeout(100000);
+    it(`should return the diffs between a commit and a branch of the local repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'ef0f4d45543313067ba84926102b8fa013a98932',
+            to_tag_branch_commit: 'one-branch-on-upstream',
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 1 files of type TypeScript or Markdown between the branch and the commit
+                // there is a second file changed but this is with extension .txt and is not counted
+                // https://github.com/EnricoPicci/gitlab-tools/compare/ef0f4d45543313067ba84926102b8fa013a98932...one-branch-on-upstream
+                (0, chai_1.expect)(diffs.length).equal(1);
+            },
+            error: (error) => {
+                done(error);
+            },
+            complete: () => done()
+        });
+    }).timeout(100000);
+    //===================== TESTS ON REMOTE REPO =====================
+    // Comparison between tags, branches and commits of the local repo and the remote repo
+    const url_to_remote_forked_repo = 'https://github.com/codemotion-2018-rome-rxjs-node/gitlab-tools';
+    it(`should return the diffs between a tag of the local repo and a tag on the remote repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'tags/first-tag',
+            to_tag_branch_commit: 'tags/tag-on-the-forked-repo',
+            url_to_remote_repo: url_to_remote_forked_repo,
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 5 files between the 2 tags 
+                // https://github.com/EnricoPicci/gitlab-tools/compare/first-tag...codemotion-2018-rome-rxjs-node:gitlab-tools:tag-on-the-forked-repo
+                (0, chai_1.expect)(diffs.length).equal(5);
+            },
+            error: (error) => done(error),
+            complete: () => done()
+        });
+    }).timeout(100000);
+    it(`should return the diffs between a branch of the local repo and a branch on the remote repo`, (done) => {
+        const comparisonParams = {
+            projectDir: './',
+            from_tag_branch_commit: 'one-branch-on-upstream',
+            to_tag_branch_commit: 'one-branch',
+            url_to_remote_repo: url_to_remote_forked_repo,
+        };
+        (0, cloc_git_diff_rel_between_tag_branch_commit_1.allDiffsForProjectWithExplanation$)(comparisonParams, repoRootFolder, promptTemplates, executedCommands, languages).pipe((0, rxjs_1.toArray)()).subscribe({
+            next: (diffs) => {
+                // there is a difference of 4 files between the 2 branches 
+                // the follwoing command shows the differences correctly (5 files, but only 4 are of type TypeScript or Markdown)
+                // git diff origin/one-branch-on-upstream base/one-branch --name-only
+                // If we run the diff with the GitHub web client we see only 3 files of differences, which seems not correct
+                // https://github.com/EnricoPicci/gitlab-tools/compare/one-branch-on-upstream...codemotion-2018-rome-rxjs-node:gitlab-tools:one-branch
+                // The file with diffs that is missing from the view of the GitHub web client is the file "ts-file-added-to-second-branch.ts"
+                // which is though present NOT present in the branch "one-branch" of the remote repo
+                // https://github.com/codemotion-2018-rome-rxjs-node/gitlab-tools/tree/one-branch
+                // but is present in the branch "one-branch-on-upstream" of the local repo
+                // https://github.com/EnricoPicci/gitlab-tools/tree/one-branch-on-upstream
+                // which would bring us to expect 4 files of differences
+                (0, chai_1.expect)(diffs.length).equal(4);
+            },
+            error: (error) => done(error),
+            complete: () => done()
+        });
+    }).timeout(100000);
+});
+function readPromptTemplates() {
+    const promptTemplateFileChanged = "/prompts/explain-diff.txt";
+    const promptTemplateFileAdded = "/prompts/explain-added.txt";
+    const promptTemplateFileRemoved = "/prompts/explain-removed.txt";
+    const currentDir = process.cwd();
+    console.log(`currentDir: ${currentDir}`);
+    const _promptTemplateFileChanged = path_1.default.join(currentDir, promptTemplateFileChanged);
+    const promptChanged = fs_1.default.readFileSync(_promptTemplateFileChanged, 'utf-8');
+    const _promptTemplateFileAdded = path_1.default.join(currentDir, promptTemplateFileAdded);
+    const promptAdded = fs_1.default.readFileSync(_promptTemplateFileAdded, 'utf-8');
+    const _promptTemplateFileRemoved = path_1.default.join(currentDir, promptTemplateFileRemoved);
+    const promptRemoved = fs_1.default.readFileSync(_promptTemplateFileRemoved, 'utf-8');
+    const promptTemplates = {
+        changedFile: { prompt: promptChanged, description: 'Prompt to summarize the changes in a file' },
+        addedFile: { prompt: promptAdded, description: 'Prompt to summarize a file that has been added' },
+        removedFile: { prompt: promptRemoved, description: 'Prompt to summarize a file that has been removed' }
+    };
+    return promptTemplates;
+}
+//# sourceMappingURL=cloc-git-diff-rel-between-tag-branch-commit.spec.js.map

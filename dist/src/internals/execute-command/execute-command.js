@@ -1,111 +1,135 @@
 "use strict";
 // https://gist.github.com/wosephjeber/212f0ca7fea740c3a8b03fc2283678d3
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.executeCommandInShellNewProcessObs = exports.executeCommandNewProcessToLinesObs = exports.executeCommandNewProcessObs = exports.executeCommandObs = exports.executeCommand = void 0;
-var child_process_1 = require("child_process");
-var rxjs_1 = require("rxjs");
+exports.getCommandOutput = exports.executeCommandInShellNewProcessObs = exports.executeCommandNewProcessToLinesObs = exports.executeCommandNewProcessObs = exports.executeCommandObs$ = exports.executeCommand = void 0;
+const child_process_1 = require("child_process");
+const rxjs_1 = require("rxjs");
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 function executeCommand(action, command) {
-    console.log("====>>>> Action: ".concat(action, " -- Executing command"));
-    console.log("====>>>> ".concat(command));
-    var ret = (0, child_process_1.execSync)(command)
+    console.log(`====>>>> Action: ${action} -- Executing command`);
+    console.log(`====>>>> ${command}`);
+    const ret = (0, child_process_1.execSync)(command)
         .toString('utf8')
         .replace(/[\n\r\s]+$/, '');
-    console.log("====>>>> Command executed successfully");
+    console.log(`====>>>> Command executed successfully`);
     return ret;
 }
 exports.executeCommand = executeCommand;
-function executeCommandObs(action, command) {
-    return new rxjs_1.Observable(function (subscriber) {
-        console.log("====>>>> Action: ".concat(action, " -- Executing command with Observable"));
-        console.log("====>>>> ".concat(command));
-        (0, child_process_1.exec)(command, function (error, stdout, stderr) {
+function executeCommandObs$(action, command, executedCommands) {
+    return new rxjs_1.Observable((subscriber) => {
+        console.log(`====>>>> Action: ${action} -- Executing command with Observable`);
+        console.log(`====>>>> ${command}`);
+        (0, child_process_1.exec)(command, (error, stdout, stderr) => {
             if (error) {
                 subscriber.error(error);
                 return;
             }
             if (stderr.length > 0) {
-                subscriber.next("from stderr: ".concat(stderr));
+                subscriber.next(`from stderr: ${stderr}`);
             }
             if (stdout.length > 0) {
-                subscriber.next("from stdout: ".concat(stdout));
+                subscriber.next(`from stdout: ${stdout}`);
             }
             if (stdout.length === 0 && stderr.length === 0) {
-                subscriber.next("no message on stdout or stderr");
+                subscriber.next(`no message on stdout or stderr`);
             }
-            console.log("====>>>> Command ".concat(command, " executed successfully"));
+            console.log(`====>>>> Command ${command} executed successfully`);
+            if (executedCommands) {
+                executedCommands.push(command);
+            }
             subscriber.complete();
         });
     });
 }
-exports.executeCommandObs = executeCommandObs;
-function executeCommandNewProcessObs(action, command, args, options) {
-    return new rxjs_1.Observable(function (subscriber) {
-        console.log("====>>>> Action: ".concat(action, " -- Executing command in new process"));
-        console.log("====>>>> Command: ".concat(command));
-        console.log("====>>>> Arguments: ".concat(args.join(' ')));
+exports.executeCommandObs$ = executeCommandObs$;
+function executeCommandNewProcessObs(action, command, args, options, executedCommands) {
+    return new rxjs_1.Observable((subscriber) => {
+        console.log(`====>>>> Action: ${action} -- Executing command in new process`);
+        console.log(`====>>>> Command: ${command}`);
+        console.log(`====>>>> Arguments: ${args.join(' ')}`);
         if (options) {
-            console.log("====>>>> Options: ".concat(JSON.stringify(options)));
+            console.log(`====>>>> Options: ${JSON.stringify(options)}`);
         }
-        var cmd = (0, child_process_1.spawn)(command, args.filter(function (a) { return a.length > 0; }), options);
-        cmd.stdout.on('data', function (data) {
+        const cmd = (0, child_process_1.spawn)(command, args.filter((a) => a.length > 0), options);
+        cmd.stdout.on('data', (data) => {
             subscriber.next(data);
         });
-        cmd.stderr.on('data', function (data) {
-            console.log("msg on stderr for command ".concat(command), data.toString());
+        cmd.stderr.on('data', (data) => {
+            console.log(`msg on stderr for command ${command}`, data.toString());
         });
-        cmd.on('error', function (error) {
+        cmd.on('error', (error) => {
             subscriber.error(error);
         });
-        cmd.on('close', function (code) {
+        cmd.on('close', (code) => {
             subscriber.complete();
-            console.log("====>>>> Command ".concat(command, " with args ").concat(args, " executed - exit code ").concat(code));
+            console.log(`====>>>> Command ${command} with args ${args} executed - exit code ${code}`);
+            if (executedCommands) {
+                executedCommands.push(`${command} ${args.join(' ')}`);
+            }
         });
     });
 }
 exports.executeCommandNewProcessObs = executeCommandNewProcessObs;
 // executes a command in a separate process and returns an Observable which is the stream of lines output of the command execution
-function executeCommandNewProcessToLinesObs(action, command, args, options) {
-    return executeCommandNewProcessObs(action, command, args, options).pipe(bufferToLines());
+function executeCommandNewProcessToLinesObs(action, command, args, options, executedCommands) {
+    return executeCommandNewProcessObs(action, command, args, options, executedCommands).pipe(bufferToLines());
 }
 exports.executeCommandNewProcessToLinesObs = executeCommandNewProcessToLinesObs;
 // custom operator that converts a buffer to lines, i.e. splits on \n to emit each line
 function bufferToLines() {
-    return function (source) {
-        return new rxjs_1.Observable(function (subscriber) {
-            var remainder = '';
-            var subscription = source.subscribe({
-                next: function (buffer) {
-                    var bufferWithRemainder = "".concat(remainder).concat(buffer);
-                    var lines = bufferWithRemainder.toString().split('\n');
+    return (source) => {
+        return new rxjs_1.Observable((subscriber) => {
+            let remainder = '';
+            const subscription = source.subscribe({
+                next: (buffer) => {
+                    const bufferWithRemainder = `${remainder}${buffer}`;
+                    const lines = bufferWithRemainder.toString().split('\n');
                     remainder = lines.splice(lines.length - 1)[0];
-                    lines.forEach(function (l) { return subscriber.next(l); });
+                    lines.forEach((l) => subscriber.next(l));
                 },
-                error: function (err) { return subscriber.error(err); },
-                complete: function () {
+                error: (err) => subscriber.error(err),
+                complete: () => {
                     subscriber.next(remainder);
                     subscriber.complete();
                 },
             });
-            return function () {
+            return () => {
                 subscription.unsubscribe();
             };
         });
     };
 }
-function executeCommandInShellNewProcessObs(action, command, options) {
-    var _options = __assign(__assign({}, options), { shell: true });
-    return executeCommandNewProcessObs(action, command, [], _options);
+function executeCommandInShellNewProcessObs(action, command, options, executedCommands) {
+    const _options = Object.assign(Object.assign({}, options), { shell: true });
+    return executeCommandNewProcessObs(action, command, [], _options, executedCommands);
 }
 exports.executeCommandInShellNewProcessObs = executeCommandInShellNewProcessObs;
+function getCommandOutput(linesFromStdOutAndStdErr, errorMessage, cmd) {
+    // the execution of the command is expected to write to stdout when all is good
+    // and both to stdout and stderr when there is an error
+    let output = '';
+    let outputLines = 0;
+    linesFromStdOutAndStdErr.forEach((line) => {
+        if (line.startsWith('from stderr: ')) {
+            console.error(`${errorMessage}\nError: ${line}`);
+            console.error(`Command erroring:`);
+            console.error(`${cmd}`);
+        }
+        if (line.startsWith('from stdout: ')) {
+            output = line.substring('from stdout: '.length);
+            outputLines++;
+        }
+        if (outputLines > 1) {
+            throw new Error(`We expect only one line to start with "from stdout: "
+Instead we received:
+${linesFromStdOutAndStdErr}`);
+        }
+    });
+    // not having received anything on stdout is an unexpected situation
+    if (!output) {
+        throw new Error('We expect one line to start with "from stdout: "');
+    }
+    return output;
+}
+exports.getCommandOutput = getCommandOutput;
+//# sourceMappingURL=execute-command.js.map
