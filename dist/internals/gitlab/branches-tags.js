@@ -7,8 +7,10 @@ exports.getLastBranch$ = exports.getBranches$ = exports.getTags$ = void 0;
 const axios_1 = __importDefault(require("axios"));
 const rxjs_1 = require("rxjs");
 const paged_command_1 = require("./paged-command");
+const clean_url_1 = require("../url-utils/clean-url");
 function getTags$(gitLabUrl, token, projectId) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectId}/repository/tags`;
+    const cleanUrl = (0, clean_url_1.removeHttpHttps)(gitLabUrl);
+    const command = `https://${cleanUrl}/api/v4/projects/${projectId}/repository/tags`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token

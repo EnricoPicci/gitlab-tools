@@ -9,7 +9,8 @@ const rxjs_1 = require("rxjs");
 const repo_1 = require("../git/repo");
 const path_1 = __importDefault(require("path"));
 function readProject$(gitLabUrl, token, projectId) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectId}`;
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '');
+    const command = `https://${cleanUrl}/api/v4/projects/${projectId}`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -35,7 +36,8 @@ function dirFromNameWithNameSpace(pathParts) {
     return pathParts.split(' / ').join(path_1.default.sep);
 }
 function compareProjects$(gitLabUrl, token, fromProjectID, fromProjectBranchTagName, toProjectId, toProjectBranchTagName, straight = true) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${toProjectId}/repository/compare?from=${fromProjectBranchTagName}&from_project_id=${fromProjectID}&to=${toProjectBranchTagName}&straight=${straight}`;
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '');
+    const command = `https://${cleanUrl}/api/v4/projects/${toProjectId}/repository/compare?from=${fromProjectBranchTagName}&from_project_id=${fromProjectID}&to=${toProjectBranchTagName}&straight=${straight}`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -46,7 +48,8 @@ function compareProjects$(gitLabUrl, token, fromProjectID, fromProjectBranchTagN
 }
 exports.compareProjects$ = compareProjects$;
 function compareFromTagOrBranchToCommit$(gitLabUrl, token, projectID, fromBranchTagName, toCommit, straight = true) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectID}/repository/compare?from=${fromBranchTagName}&to=${toCommit}&straight=${straight}`;
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '');
+    const command = `https://${cleanUrl}/api/v4/projects/${projectID}/repository/compare?from=${fromBranchTagName}&to=${toCommit}&straight=${straight}`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token

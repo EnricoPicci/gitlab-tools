@@ -7,8 +7,10 @@ exports.fetchAllGroupProjects$ = exports.fetchGroupDescendantGroups = exports.re
 const axios_1 = __importDefault(require("axios"));
 const rxjs_1 = require("rxjs");
 const paged_command_1 = require("./paged-command");
+const clean_url_1 = require("../url-utils/clean-url");
 function readGroup$(gitLabUrl, token, groupId) {
-    const command = `https://${gitLabUrl}/api/v4/groups/${groupId}`;
+    const cleanUrl = (0, clean_url_1.removeHttpHttps)(gitLabUrl);
+    const command = `https://${cleanUrl}/api/v4/groups/${groupId}`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -20,12 +22,16 @@ function readGroup$(gitLabUrl, token, groupId) {
         if (err.code === 'ERR_BAD_REQUEST') {
             console.error(`Status: ${err.response.status} - ${err.response.statusText}`);
         }
+        else {
+            console.error(err);
+        }
         return rxjs_1.EMPTY;
     }));
 }
 exports.readGroup$ = readGroup$;
 function fetchGroupDescendantGroups(gitLabUrl, token, groupId) {
-    const command = `https://${gitLabUrl}/api/v4/groups/${groupId}/descendant_groups`;
+    const cleanUrl = (0, clean_url_1.removeHttpHttps)(gitLabUrl);
+    const command = `https://${cleanUrl}/api/v4/groups/${groupId}/descendant_groups`;
     return (0, rxjs_1.from)(axios_1.default.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
