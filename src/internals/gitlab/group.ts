@@ -2,16 +2,11 @@ import axios from "axios"
 import { EMPTY, catchError, concatMap, from, map, tap } from "rxjs"
 import { GroupCompact } from "./group.model"
 import { runPagedCommand } from "./paged-command"
+import { removeHttpHttps } from "../url-utils/clean-url"
 
 export function readGroup$(gitLabUrl: string, token: string, groupId: string) {
-    // the url must not have http or https in it
-    if (gitLabUrl.startsWith('http://')) {
-        gitLabUrl = gitLabUrl.replace('http://', '')
-    }
-    if (gitLabUrl.startsWith('https://')) {
-        gitLabUrl = gitLabUrl.replace('https://', '')
-    }
-    const command = `https://${gitLabUrl}/api/v4/groups/${groupId}`
+    const cleanUrl = removeHttpHttps(gitLabUrl)
+    const command = `https://${cleanUrl}/api/v4/groups/${groupId}`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -34,7 +29,8 @@ export function readGroup$(gitLabUrl: string, token: string, groupId: string) {
 }
 
 export function fetchGroupDescendantGroups(gitLabUrl: string, token: string, groupId: string) {
-    const command = `https://${gitLabUrl}/api/v4/groups/${groupId}/descendant_groups`
+    const cleanUrl = removeHttpHttps(gitLabUrl)
+    const command = `https://${cleanUrl}/api/v4/groups/${groupId}/descendant_groups`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token

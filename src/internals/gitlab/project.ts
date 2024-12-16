@@ -6,7 +6,8 @@ import { cloneRepo } from "../git/repo"
 import path from "path"
 
 export function readProject$(gitLabUrl: string, token: string, projectId: string) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectId}`
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '')
+    const command = `https://${cleanUrl}/api/v4/projects/${projectId}`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -44,7 +45,8 @@ export function compareProjects$(
     toProjectBranchTagName: string,
     straight = true
 ) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${toProjectId}/repository/compare?from=${fromProjectBranchTagName}&from_project_id=${fromProjectID}&to=${toProjectBranchTagName}&straight=${straight}`
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '')
+    const command = `https://${cleanUrl}/api/v4/projects/${toProjectId}/repository/compare?from=${fromProjectBranchTagName}&from_project_id=${fromProjectID}&to=${toProjectBranchTagName}&straight=${straight}`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
@@ -64,7 +66,8 @@ export function compareFromTagOrBranchToCommit$(
     toCommit: string,
     straight = true
 ) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectID}/repository/compare?from=${fromBranchTagName}&to=${toCommit}&straight=${straight}`
+    const cleanUrl = gitLabUrl.replace('http://', '').replace('https://', '')
+    const command = `https://${cleanUrl}/api/v4/projects/${projectID}/repository/compare?from=${fromBranchTagName}&to=${toCommit}&straight=${straight}`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token

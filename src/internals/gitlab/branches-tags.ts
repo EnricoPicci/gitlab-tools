@@ -1,9 +1,11 @@
 import axios from "axios"
 import { from, map } from "rxjs"
 import { runPagedCommand } from "./paged-command"
+import { removeHttpHttps } from "../url-utils/clean-url"
 
 export function getTags$(gitLabUrl: string, token: string, projectId: string) {
-    const command = `https://${gitLabUrl}/api/v4/projects/${projectId}/repository/tags`
+    const cleanUrl = removeHttpHttps(gitLabUrl)
+    const command = `https://${cleanUrl}/api/v4/projects/${projectId}/repository/tags`
     return from(axios.get(command, {
         headers: {
             "PRIVATE-TOKEN": token
